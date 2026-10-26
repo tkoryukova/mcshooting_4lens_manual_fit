@@ -175,7 +175,7 @@
       <h3>Resolution</h3>
       <div class="grid" id="gridResolution"></div>
       <div class="resolution-hint" id="resolutionHint">
-        u' бины: 200 · пересчёт: —
+        u' бины: 50 · пересчёт: —
       </div>
     </div>
 
@@ -196,7 +196,9 @@ const NU_LIST_GHZ = [5.0, 8.0, 11.0];
 const NU_REF_GHZ = 8.0;
 
 const T_START = 2015.0;
-const T_END   = 2016.0;          // ← расширено, как в 4-линзовом Python
+const T_END   = 2016.0;
+
+const Y_RANGE = [1.6, 2.9];   // ← фиксированный Y-диапазон
 
 const COLORS = ['green', 'blue', 'red'];
 const MARKERS = ['circle', 'square', 'triangle-up'];
@@ -223,14 +225,14 @@ const DEFAULTS = {
   F0_1:      2.58,
   F0_2:      2.19,
   F0_3:      1.97,
-  // Resolution
+  // Resolution — снижено для скорости
   u_range_min:       -45,
   u_range_max:        15,
   u_prime_range_min: -45,
   u_prime_range_max:  15,
-  draw_num_beta:    8000,
-  draw_num_u:        800,
-  draw_num_bins:     200
+  draw_num_beta:    1000,
+  draw_num_u:        200,
+  draw_num_bins:      50
 };
 
 let params = { ...DEFAULTS };
@@ -340,8 +342,6 @@ function computeEseMulti(lenses, sigmaSource, uRange, uPrimeRange,
 
 // ============================================================
 // Кэш Монте-Карло
-// ВАЖНО: ключ включает ВСЕ u_offset (uOffset2/3/4Ref),
-// потому что они влияют на форму I_ref(u').
 // ============================================================
 const eseCache = new Map();
 
@@ -533,7 +533,8 @@ function update() {
   tMinLabels.forEach(({t, color, label}) => {
     if (t < T_START || t > T_END) return;
     traces.push({
-      x: [t, t], y: [0, 10],
+      x: [t, t],
+      y: [Y_RANGE[0], Y_RANGE[1]],           // ← линия на всю высоту
       type: 'scatter', mode: 'lines',
       line: { color, dash: 'dot', width: 1.5 },
       name: `${label} = ${t.toFixed(3)}`,
@@ -554,6 +555,7 @@ function update() {
     },
     yaxis: {
       title: "Flux density (Jy)",
+      range: Y_RANGE,                        // ← фиксированный Y
       zeroline: false,
       gridcolor: '#e8eef3'
     },
@@ -621,8 +623,7 @@ function makeSlider(containerId, key, label, min, max, step, fmt) {
 }
 
 function buildSliders() {
-  // Форма линз: alpha_ref, sigma_ref, alpha2, alpha3, alpha4,
-  //             a_ratio2, a_ratio3, a_ratio4
+  // Форма линз
   makeSlider('gridLenses', 'alpha_ref', 'alpha_ref', 0, 5, 0.01, v => v.toFixed(2));
   makeSlider('gridLenses', 'sigma_ref', 'sigma_ref', 0.3, 5, 0.01, v => v.toFixed(2));
   makeSlider('gridLenses', 'alpha2',    'alpha2',    0, 5, 0.01, v => v.toFixed(2));
@@ -650,8 +651,8 @@ function buildSliders() {
   makeSlider('gridResolution', 'u_range_max',       'u_range_max',         0, 30, 0.5, v => v.toFixed(1));
   makeSlider('gridResolution', 'u_prime_range_min', "u'_range_min",      -60, 0, 0.5, v => v.toFixed(1));
   makeSlider('gridResolution', 'u_prime_range_max', "u'_range_max",        0, 30, 0.5, v => v.toFixed(1));
-  makeSlider('gridResolution', 'draw_num_beta',     'num_beta',          500, 20000, 100, v => v.toFixed(0));
-  makeSlider('gridResolution', 'draw_num_u',        'num_u',             100, 2000, 50, v => v.toFixed(0));
+  makeSlider('gridResolution', 'draw_num_beta',     'num_beta',          100, 20000, 100, v => v.toFixed(0));
+  makeSlider('gridResolution', 'draw_num_u',        'num_u',              50, 2000, 50, v => v.toFixed(0));
   makeSlider('gridResolution', 'draw_num_bins',     'num_bins',           20, 400, 5, v => v.toFixed(0));
 }
 
